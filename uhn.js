@@ -4,21 +4,21 @@ module.exports = {
 
 var pk;
 var viewPath;
-var ac; // app_config
+var app_config; // app_config
 var viewPath;
 
 async function registerEndpoints(pkSource, acSource) {
 	pk = pkSource;
-	ac = acSource;
+	app_config = acSource;
 	
-	console.log(ac.client + ' starting up at ' + Date());
+	console.log(app_config.client + ' starting up at ' + Date());
 	
 	var possibleError = '';
 	try{
 		viewPath = pk.app.settings.views;
 
 		// Set up endpoints
-		var endpoint = ac.applicationPath + '/landing_page';
+		var endpoint = app_config.applicationPath + '/landing_page';
 		pk.app.options(endpoint, pk.cors());
 		pk.app.post(endpoint, pk.scaffold.corsOptions(), function(req, res){
 			landing_page(req, res);
@@ -27,22 +27,9 @@ async function registerEndpoints(pkSource, acSource) {
 			landing_page(req, res);
 		});
 
-		pk.app.get(ac.applicationPath, pk.scaffold.corsOptions(), function(req, res){
+		pk.app.get(app_config.applicationPath, pk.scaffold.corsOptions(), function(req, res){
 			startApplication(req, res);
 		});
-
-		pk.scaffold.validateRequestConfig(ac.request_config);
-
-		var initParams = {
-			client_name: ac.client,
-			authenticator: "",
-			api_config: encodeURIComponent(JSON.stringify(ac.request_config))
-		};
-
-		console.log('Registering with ' + ac.client_api_url);
-		possibleError = 'Unable to register with API';
-		var sessionKey = await pk.scaffold.registerApi(initParams);
-		console.log('Successful registration: ' + sessionKey);		
 	}
 	catch(err){
 		console.log("*** ERROR ****")
@@ -58,50 +45,38 @@ async function startApplication(req, res) {
 		'Pragma': 'no-cache'
 	});
 
-	// has a wallet been specified via header or queryString?
-	// if not, only scans will work
-	var iss = req.header('x-did-openid');
-	if (!iss){
-		if (req.query.did){
-			iss = req.query.did;
-		}
-	}
+	var app_instance = {
+		target_link_uri: app_config.applicationUrl + '/landing_page'
+	};
 	
-	// endpoint to be called followed response from the wallet
-	var target_link_uri = ac.applicationUrl + '/landing_page';
-
 	var response_mode = undefined;
 	if (req.query && req.query.post === 'true'){
 		response_mode = 'form_post';
 	}
 
-	var app_instance_params = {
-		client_name: ac.client,
-		credential_type: ac.credential_type,
-    	client_api_url: ac.client_api_url,
-		iss: iss,
-		target_link_uri: target_link_uri
-	}
-
 	//render the application screen
     res.render(viewPath + '/start_application', {
     	layout: 'main_responsive',
-    	app_instance_params: JSON.stringify(app_instance_params),
-    	client_api_url: ac.client_api_url
+    	app_config: app_config,
+    	app_instance_params: JSON.stringify(app_instance),
+    	app_config_params: JSON.stringify(app_config),
+    	client_api_url: app_config.client_api_url
     });
 }
 
 async function landing_page(req, res) {
 	var params = req.query.error ? req.query : req.body;
 	if (params.error){
-		await pk.scaffold.landingPageError(params, res, viewPath, ac.applicationUrl);
+		await pk.scaffold.landingPageError(params, res, viewPath, app_config.applicationUrl);
 	    return;		
 	}
 
 	if (!req.body.id_token){
 		throw('No id_token at landing_page');
 	}
-	var iClaims = JSON.parse(req.body.id_token);
+
+	var idToken = decodeURIComponent(req.body.id_token);
+	var iClaims = JSON.parse(idToken);
 
 	var credentialSubject = iClaims.presentedVcs[0].vc.credentialSubject;
     var instructions;
