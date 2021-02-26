@@ -46,7 +46,7 @@ async function startApplication(req, res) {
 	});
 
 	var app_instance = {
-		target_link_uri: app_config.applicationUrl + '/landing_page'
+		target_link_uri: app_config.application_url + '/landing_page'
 	};
 	
 	var response_mode = undefined;
@@ -65,33 +65,40 @@ async function startApplication(req, res) {
 }
 
 async function landing_page(req, res) {
-	var params = req.query.error ? req.query : req.body;
-	if (params.error){
-		await pk.scaffold.landingPageError(params, res, viewPath, app_config.applicationUrl);
-	    return;		
+	try{
+		var params = req.query.error ? req.query : req.body;
+		if (params.error){
+			await pk.scaffold.landingPageError(params, res, viewPath, app_config.application_url);
+		    return;		
+		}
+
+		if (!req.body.id_token){
+			throw('No id_token at landing_page');
+		}
+
+		var idToken = decodeURIComponent(req.body.id_token);
+		var iClaims = JSON.parse(idToken);
+
+		var credentialSubject = iClaims.presentedVcs[0].vc.credentialSubject;
+	    var instructions;
+	    if (credentialSubject.status === 'OK'){
+	    	instructions = 'Welcome, ' + credentialSubject.firstName + ' ' + credentialSubject.lastName;
+	    }
+	    else{
+	    	instructions = 'Automated entry not available.  Status is "' + credentialSubject.status + '"';
+	    }
+
+		res.render(viewPath + '/enter', {
+	    	layout: 'main_responsive',
+	    	app_config: app_config,
+	    	iClaims: iClaims,
+	    	credentialSubject: credentialSubject,
+	    	instructions: instructions
+	    });		
 	}
-
-	if (!req.body.id_token){
-		throw('No id_token at landing_page');
+	catch(err){
+		//TODO:  put this somewhere useful
+		console.log("ERROR:" + err);
 	}
-
-	var idToken = decodeURIComponent(req.body.id_token);
-	var iClaims = JSON.parse(idToken);
-
-	var credentialSubject = iClaims.presentedVcs[0].vc.credentialSubject;
-    var instructions;
-    if (credentialSubject.status === 'OK'){
-    	instructions = 'Welcome, ' + credentialSubject.firstName + ' ' + credentialSubject.lastName;
-    }
-    else{
-    	instructions = 'Automated entry not available.  Status is "' + credentialSubject.status + '"';
-    }
-
-	res.render(viewPath + '/enter', {
-    	layout: 'main_responsive',
-    	iClaims: iClaims,
-    	credentialSubject: credentialSubject,
-    	instructions: instructions
-    });
 }
 

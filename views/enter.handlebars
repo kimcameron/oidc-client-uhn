@@ -1,6 +1,30 @@
 <link href="/style.css" rel="stylesheet">
 
-<div class="container-fluid padding">
+<!-- Navigation -->
+<nav class="navbar navbar-expand-md bg-dark navbar-dark sticky-top">
+<div class="container-fluid">
+  <a class="navbar-brand" href="#"><img height="24" src="/web/img/logo_d.jpg"></a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarResponsive">
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item active">
+      <li class="nav-item">
+        <a class="nav-link" href="{{app_config.app_launcher_url}}">Health App Menu</a> 
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Help</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" onclick="siop_removeCookies();">Reset</a>
+      </li>
+    </ul>
+  </div>
+</div>
+</nav>
+
+<div class="mt-5 container-fluid padding">
 <div class="row welcome text-center">
   <div class="col-4" style="padding-bottom: 0em;">
 	  <img src="/web/img/uhn.jpg">
@@ -16,7 +40,7 @@
 <div class="container-fluid padding">
 <div class="row welcome text-center"
   <div class="col-12">
-    <h1 class="display-4" style="padding-left: 1em;">{{{instructions}}}</h1>
+    <h1 class="display-6" style="padding-left: 1em;">{{{instructions}}}</h1>
   </div>
 {{#if iClaims.photo}}
   <div class="col-12">
