@@ -49,9 +49,8 @@ async function startApplication(req, res) {
 		target_link_uri: app_config.application_url + '/landing_page'
 	};
 	
-	var response_mode = undefined;
 	if (req.query && req.query.post === 'true'){
-		response_mode = 'form_post';
+		app_instance.response_mode = 'form_post';
 	}
 
 	//render the application screen
