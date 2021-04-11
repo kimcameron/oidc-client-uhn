@@ -30,6 +30,12 @@ async function registerEndpoints(pkSource, acSource) {
 		pk.app.get(app_config.applicationPath, pk.scaffold.corsOptions(), function(req, res){
 			startApplication(req, res);
 		});
+
+		endpoint = app_config.applicationPath + '/did.json';
+		pk.app.options(endpoint, pk.cors());
+		pk.app.get(endpoint, pk.scaffold.corsOptions(), function(req, res){
+			diDocument(req, res);
+		});
 	}
 	catch(err){
 		console.log("*** ERROR ****")
@@ -101,3 +107,21 @@ async function landing_page(req, res) {
 	}
 }
 
+function diDocument(req, res){
+	// corresponding did --> did:web:book.itsourweb.org:uhn
+	var _document = {
+		"@context": "https://w3id.org/did/v1",
+		"id": "did:web:example.com",
+		"publicKey": [{
+		   "id": "did:web:example.com#owner",
+		   "type": "Secp256k1VerificationKey2018",
+		   "owner": "did:web:example.com",
+		   "ethereumAddress": "0xb9c5714089478a327f09197987f16f9e5d936e8a"
+		}],
+		"authentication": [{
+		   "type": "Secp256k1SignatureAuthentication2018",
+		   "publicKey": "did:web:example.com#owner"
+		}]
+	};
+	res.json(_document);
+}

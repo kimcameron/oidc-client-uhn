@@ -60,12 +60,18 @@
 <script src="{{client_api_url}}/siop_mqtt_client.js"></script>
 
 <script>
-  // debugger;
-  var app_instance = new oidc_app_instance('app_config_params', 'app_instance_params', autoProceed);
+  debugger;
+
+  var rwl_device = siop_getCookie('rwl_device');
+  var li_parameters = {
+      rwl: rwl_device
+  }
+
+  var app_instance = new oidc_app_instance('app_config_params', 'app_instance_params', autoProceed, {li_parameters: li_parameters});
   app_instance.startup();
 
   function autoProceed(discovery_info, wallet_url){
-    if (wallet_url){
+    if (wallet_url && discovery_info.rwl === 'false'){
       window.location = discovery_info.credential_request_url;
       return false;
     }
